@@ -1,0 +1,3 @@
+#!/bin/bash
+
+swift package --enable-prefetching generate-xcodeproj
