@@ -6,13 +6,11 @@
 //
 //
 
-import Foundation
-
-public protocol ResourceType {
+public protocol JsonApiResourceType {
     func parse() -> String
 }
 
-extension String: ResourceType {
+extension String: JsonApiResourceType {
 
     public func parse() -> String {
         return self

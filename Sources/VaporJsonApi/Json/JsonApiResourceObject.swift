@@ -11,7 +11,7 @@ import Vapor
 public class JsonApiResourceObject: JSONRepresentable {
 
     public let id: String
-    public let type: String
+    public let type: JsonApiResourceType
     public let attributes: JsonApiAttributesObject?
     public let relationships: JsonApiRelationshipsObject?
     public let links: JsonApiLinksObject?
@@ -29,7 +29,7 @@ public class JsonApiResourceObject: JSONRepresentable {
      */
     public init(
         id: String,
-        type: String,
+        type: JsonApiResourceType,
         attributes: JsonApiAttributesObject? = nil,
         relationships: JsonApiRelationshipsObject? = nil,
         links: JsonApiLinksObject? = nil,
@@ -45,7 +45,7 @@ public class JsonApiResourceObject: JSONRepresentable {
     public func makeJSON() throws -> JSON {
         var json = try JSON(node: [
             "id": Node(id),
-            "type": Node(type)
+            "type": Node(type.parse())
             ])
 
         if let attributes = attributes {
@@ -90,23 +90,46 @@ public class JsonApiAttributesObject: JSONRepresentable {
 
 public class JsonApiRelationshipsObject: JSONRepresentable {
 
+    public let relationshipObjects: [JsonApiRelationshipObject]
+
+    public init(relationshipObjects: [JsonApiRelationshipObject]) {
+        self.relationshipObjects = relationshipObjects
+    }
+
+    public func makeJSON() throws -> JSON {
+        var json = try JSON(node: [:])
+
+        for relationshipObject in relationshipObjects {
+            json[relationshipObject.name] = try relationshipObjects.makeJSON()
+        }
+
+        return json
+    }
+}
+
+public class JsonApiRelationshipObject: JSONRepresentable {
+
+    public let name: String
     public let links: JsonApiLinksObject?
     public let data: JsonApiResourceLinkage?
     public let meta: JsonApiMeta?
 
-    public init(links: JsonApiLinksObject, data: JsonApiResourceLinkage? = nil, meta: JsonApiMeta? = nil) {
+    public init(name: String, links: JsonApiLinksObject, data: JsonApiResourceLinkage? = nil, meta: JsonApiMeta? = nil) {
+        self.name = name
         self.links = links
         self.data = data
         self.meta = meta
     }
 
-    public init(data: JsonApiResourceLinkage, links: JsonApiLinksObject? = nil, meta: JsonApiMeta? = nil) {
+    public init(name: String, data: JsonApiResourceLinkage, links: JsonApiLinksObject? = nil, meta: JsonApiMeta? = nil) {
+        self.name = name
         self.links = links
         self.data = data
         self.meta = meta
     }
 
-    public init(meta: JsonApiMeta, links: JsonApiLinksObject? = nil, data: JsonApiResourceLinkage? = nil) {
+    public init(name: String, meta: JsonApiMeta, links: JsonApiLinksObject? = nil, data: JsonApiResourceLinkage? = nil) {
+        self.name = name
         self.links = links
         self.data = data
         self.meta = meta
@@ -126,7 +149,7 @@ public class JsonApiRelationshipsObject: JSONRepresentable {
         if let meta = meta {
             json["meta"] = try meta.makeJSON()
         }
-
+        
         return json
     }
 }
@@ -234,7 +257,7 @@ public class JsonApiResourceLinkage: JSONRepresentable {
 public class JsonApiResourceIdentifierObject: JSONRepresentable {
 
     public let id: String
-    public let type: String
+    public let type: JsonApiResourceType
     public let meta: JsonApiMeta?
 
     /**
@@ -244,7 +267,7 @@ public class JsonApiResourceIdentifierObject: JSONRepresentable {
      * - parameter type: The `type` of this `ResourceIdentifierObject`.
      * - parameter meta: An optional `meta` object to be added to the `ResourceIdentifierObject`.
      */
-    public init(id: String, type: String, meta: JsonApiMeta? = nil) {
+    public init(id: String, type: JsonApiResourceType, meta: JsonApiMeta? = nil) {
         self.id = id
         self.type = type
         self.meta = meta
@@ -253,7 +276,7 @@ public class JsonApiResourceIdentifierObject: JSONRepresentable {
     public func makeJSON() throws -> JSON {
         var json = try JSON(node: [
             "id": Node(id),
-            "type": Node(type)
+            "type": Node(type.parse())
             ])
         if let meta = meta {
             json["meta"] = try meta.makeJSON()

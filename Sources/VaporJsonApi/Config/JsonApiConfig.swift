@@ -22,4 +22,6 @@ public struct JsonApiConfig {
 
     // ******* Pagination specific *******
     public static var defaultPaginator: JsonApiPaginator = JsonApiPagedPaginator()
+    public static var defaultPageSize: Int = 10
+    public static var maximumPageSize: Int = 20
 }

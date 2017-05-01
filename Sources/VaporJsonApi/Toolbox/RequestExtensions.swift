@@ -58,3 +58,10 @@ extension Request {
         return accept.value
     }
 }
+
+extension Request {
+
+    func jsonApiQuery() -> JSON {
+        return uri.jsonApiQuery()
+    }
+}
