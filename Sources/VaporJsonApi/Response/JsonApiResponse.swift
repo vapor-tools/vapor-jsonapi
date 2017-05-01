@@ -1,15 +1,15 @@
 //
-//  JsonApiError.swift
+//  JsonApiResponse.swift
 //  VaporJsonApi
 //
-//  Created by Koray Koska on 30/04/2017.
+//  Created by Koray Koska on 01/05/2017.
 //
 //
 
 import Vapor
 import HTTP
 
-public class JsonApiError: ResponseRepresentable {
+public class JsonApiResponse: ResponseRepresentable {
 
     public let status: Status
     public let document: JsonApiDocument

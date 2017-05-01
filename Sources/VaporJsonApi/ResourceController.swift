@@ -21,9 +21,7 @@ public extension ResourceController {
 
     func getResources(_ req: Request) throws -> ResponseRepresentable {
 
-        guard let accept = req.headers.first(where: { (key, value) -> Bool in
-            return key == HeaderKey.accept
-        }) else {
+        guard req.fulfillsJsonApiAcceptResponsibilities() else {
             throw Abort.custom(status: .badRequest, message: "The Accept Header must be set!")
         }
 

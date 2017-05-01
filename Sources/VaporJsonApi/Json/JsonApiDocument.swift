@@ -14,14 +14,14 @@ public class JsonApiDocument: JSONRepresentable {
     public let errors: [JsonApiErrorObject]?
     public let meta: JsonApiMeta?
 
-    public init(data: JsonApiData, meta: JsonApiMeta?) {
+    public init(data: JsonApiData, meta: JsonApiMeta? = nil) {
         self.data = data
         self.meta = meta
 
         self.errors = nil
     }
 
-    public init(errors: [JsonApiErrorObject], meta: JsonApiMeta?) {
+    public init(errors: [JsonApiErrorObject], meta: JsonApiMeta? = nil) {
         self.errors = errors
         self.meta = meta
 

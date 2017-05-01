@@ -11,8 +11,9 @@ import HTTP
 
 public struct JsonApiConfig {
 
-    public static let contentTypeValue: String = "application/vnd.api+json"
-    public static let contentType: (key: HeaderKey, value: String) = (HeaderKey.contentType, JsonApiConfig.contentTypeValue)
+    public static let mediaTypeValue: String = "application/vnd.api+json"
+
+    public static let contentType: (key: HeaderKey, value: String) = (HeaderKey.contentType, JsonApiConfig.mediaTypeValue)
 
     public static var defaultHeaders: [HeaderKey: String] {
         let headers: [HeaderKey: String] = [JsonApiConfig.contentType.key: JsonApiConfig.contentType.value]
