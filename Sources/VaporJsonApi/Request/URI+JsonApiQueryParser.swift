@@ -33,7 +33,9 @@ public extension URI {
 
                 let keyKey = keyValue.key.jsonApiKeySubKey()
                 let topLevelKey = keyKey.topLevelKey
-                let dictionaryKey = keyKey.dictionaryKey
+                // The dictionaryKey is empty because we have elements like "array[]" where there are no
+                // characters between the square brackets...
+                // let dictionaryKey = keyKey.dictionaryKey
 
                 if let a = try? json[topLevelKey]?.makeJSON().array, var arr = a {
                     arr.append(keyValue.value)
@@ -41,7 +43,7 @@ public extension URI {
                     let jsonArr = arr.map({ JSON(Node($0.string ?? "")) })
                     json[topLevelKey] = JSON(jsonArr)
                 } else {
-                    json[topLevelKey] = try? JSON([JSON(node: [dictionaryKey: keyValue.value])])
+                    json[topLevelKey] = try? JSON([JSON(Node(keyValue.value))])
                 }
             } else if keyValue.key.hasSuffix("]")
                 && keyValue.key.contains("[")
