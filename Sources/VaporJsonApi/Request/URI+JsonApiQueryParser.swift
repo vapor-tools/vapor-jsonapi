@@ -10,11 +10,11 @@ import HTTP
 import Vapor
 import URI
 
-public extension URI {
+extension URI {
 
     // TODO: Vapor 2.0 will include query dictionary parsing so this should be removed ASAP once it is released.
     // See the discussion on Github: https://github.com/vapor/vapor/issues/955
-    public func jsonApiQuery() -> JSON {
+    func jsonApiQuery() -> JSON {
         guard let query = query, var json = try? JSON(node: [:]) else {
             return JSON(Node(nilLiteral: ()))
         }
@@ -43,7 +43,7 @@ public extension URI {
                     let jsonArr = arr.map({ JSON(Node($0.string ?? "")) })
                     json[topLevelKey] = JSON(jsonArr)
                 } else {
-                    json[topLevelKey] = try? JSON([JSON(Node(keyValue.value))])
+                    json[topLevelKey] = JSON([JSON(Node(keyValue.value))])
                 }
             } else if keyValue.key.hasSuffix("]")
                 && keyValue.key.contains("[")
