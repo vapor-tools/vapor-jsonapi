@@ -19,4 +19,7 @@ public struct JsonApiConfig {
         let headers: [HeaderKey: String] = [JsonApiConfig.contentType.key: JsonApiConfig.contentType.value]
         return headers
     }
+
+    // ******* Pagination specific *******
+    public static var defaultPaginator: JsonApiPaginator = JsonApiPagedPaginator()
 }

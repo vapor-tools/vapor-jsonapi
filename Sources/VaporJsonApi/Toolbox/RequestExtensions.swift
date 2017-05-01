@@ -47,4 +47,14 @@ extension Request {
         // Content Type must be exactly application/vnd.api+json without media type parameters.
         return contentType.value.trim().lowercased() == JsonApiConfig.mediaTypeValue.trim().lowercased()
     }
+
+    func acceptHeaderValue() -> String? {
+        guard let accept = self.headers.first(where: { (key, value) -> Bool in
+            return key == HeaderKey.accept
+        }) else {
+            return nil
+        }
+
+        return accept.value
+    }
 }

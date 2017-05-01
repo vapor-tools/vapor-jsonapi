@@ -19,10 +19,17 @@ public protocol ResourceController {
 
 public extension ResourceController {
 
+    /**
+     * The `getResources` method is responsible for get requests to the resource collection.
+     *
+     * Example: `/articles` for the article resource.
+     *
+     * - parameter req: The `Request` which fired this method.
+     */
     func getResources(_ req: Request) throws -> ResponseRepresentable {
 
         guard req.fulfillsJsonApiAcceptResponsibilities() else {
-            throw Abort.custom(status: .badRequest, message: "The Accept Header must be set!")
+            throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
         }
 
         return "Hello"
