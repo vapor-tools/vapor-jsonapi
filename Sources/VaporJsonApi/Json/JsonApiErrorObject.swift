@@ -37,7 +37,7 @@ public class JsonApiErrorObject: JSONRepresentable {
     }
 
     public func makeJSON() throws -> JSON {
-        var json = try JSON(node: [])
+        var json = try JSON(node: [:])
 
         if let links = links {
             json["links"] = try links.makeJSON()
@@ -91,7 +91,7 @@ public class JsonApiErrorSource: JSONRepresentable {
     }
 
     public func makeJSON() throws -> JSON {
-        var json = try JSON(node: [])
+        var json = try JSON(node: [:])
 
         if let pointer = pointer {
             json["pointer"] = try JSON(node: pointer)
