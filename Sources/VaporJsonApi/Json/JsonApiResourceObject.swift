@@ -113,7 +113,7 @@ public class JsonApiRelationshipsObject: JSONRepresentable {
     }
 
     public func makeJSON() throws -> JSON {
-        var json = JSON([])
+        var json = try JSON(node: [])
 
         if let links = links {
             json["links"] = try links.makeJSON()

@@ -29,7 +29,7 @@ public class JsonApiDocument: JSONRepresentable {
     }
 
     public func makeJSON() throws -> JSON {
-        var json = JSON([])
+        var json = try JSON(node: [])
 
         if let data = data {
             json["data"] = try data.makeJSON()
