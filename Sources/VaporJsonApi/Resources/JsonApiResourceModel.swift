@@ -14,7 +14,7 @@ open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
 
     // MARK: - JsonApiResourceRepresentable stubs
 
-    open static var resourceType: JsonApiResourceType {
+    open class var resourceType: JsonApiResourceType {
         return ""
     }
 
