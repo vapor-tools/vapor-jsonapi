@@ -46,11 +46,11 @@ open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement makeNode()")
     }
 
-    open static func prepare(_ database: Database) throws {
+    open class func prepare(_ database: Database) throws {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement prepare(_:)")
     }
 
-    open static func revert(_ database: Database) throws {
+    open class func revert(_ database: Database) throws {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement revert(_:)")
     }
 }
