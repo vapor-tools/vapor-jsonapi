@@ -10,47 +10,47 @@ import Vapor
 import HTTP
 import Fluent
 
-public class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
+open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
 
     // MARK: - JsonApiResourceRepresentable stubs
 
-    public static var resourceType: JsonApiResourceType {
+    open static var resourceType: JsonApiResourceType {
         return ""
     }
 
-    public func attributes() throws -> JsonApiAttributes {
+    open func attributes() throws -> JsonApiAttributes {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'JsonApiResourceModel' must implement attributes()")
     }
 
-    public func parentRelationships() throws -> JsonApiParentRelationships {
+    open func parentRelationships() throws -> JsonApiParentRelationships {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'JsonApiResourceModel' must implement parentRelationships()")
     }
 
-    public func childrenRelationships() throws -> JsonApiChildrenRelationships {
+    open func childrenRelationships() throws -> JsonApiChildrenRelationships {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'JsonApiResourceModel' must implement childrenRelationships()")
     }
 
-    public func siblingsRelationships() throws -> JsonApiSiblingsRelationships {
+    open func siblingsRelationships() throws -> JsonApiSiblingsRelationships {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'JsonApiResourceModel' must implement siblingsRelationships()")
     }
 
     // MARK: - Model stubs
 
-    public var id: Node?
+    open var id: Node?
 
     public required init(node: Node, in context: Context) throws {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement init(node:in context)")
     }
 
-    public func makeNode(context: Context) throws -> Node {
+    open func makeNode(context: Context) throws -> Node {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement makeNode()")
     }
 
-    public static func prepare(_ database: Database) throws {
+    open static func prepare(_ database: Database) throws {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement prepare(_:)")
     }
 
-    public static func revert(_ database: Database) throws {
+    open static func revert(_ database: Database) throws {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement revert(_:)")
     }
 }
