@@ -42,6 +42,14 @@ public extension JsonApiResourceController {
         }
         let resources = try Resource.query().limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
 
-        return "Hello"
+        var resourceObjects = [JsonApiResourceObject]()
+        for r in resources {
+            resourceObjects.append(try r.makeResourceObject(resourceModel: r, baseUrl: req.uri))
+        }
+
+        let data = JsonApiData(resourceObjects: resourceObjects)
+        let document = JsonApiDocument(data: data)
+
+        return JsonApiResponse(status: .ok, document: document)
     }
 }

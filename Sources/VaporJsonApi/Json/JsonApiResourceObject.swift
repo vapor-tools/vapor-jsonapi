@@ -7,6 +7,7 @@
 //
 
 import Vapor
+import URI
 
 public class JsonApiResourceObject: JSONRepresentable {
 
@@ -156,13 +157,13 @@ public class JsonApiRelationshipObject: JSONRepresentable {
 
 public class JsonApiLinksObject: JSONRepresentable {
 
-    public let selfLink: String
+    public let selfLink: URI
     public let selfMeta: JsonApiMeta?
 
-    public let relatedLink: String
+    public let relatedLink: URI
     public let relatedMeta: JsonApiMeta?
 
-    public init(selfLink: String, selfMeta: JsonApiMeta? = nil, relatedLink: String, relatedMeta: JsonApiMeta? = nil) {
+    public init(selfLink: URI, selfMeta: JsonApiMeta? = nil, relatedLink: URI, relatedMeta: JsonApiMeta? = nil) {
         self.selfLink = selfLink
         self.selfMeta = selfMeta
 
@@ -174,21 +175,21 @@ public class JsonApiLinksObject: JSONRepresentable {
         let selfJson: JSON
         if let selfMeta = selfMeta {
             selfJson = try JSON(node: [
-                "href": Node(selfLink),
+                "href": try selfLink.makeFoundationURL().absoluteString,
                 "meta": selfMeta.makeJSON()
                 ])
         } else {
-            selfJson = JSON(Node(selfLink))
+            selfJson = try JSON(Node(selfLink.makeFoundationURL().absoluteString))
         }
 
         let relatedJson: JSON
         if let relatedMeta = relatedMeta {
             relatedJson = try JSON(node: [
-                "href": Node(relatedLink),
+                "href": try relatedLink.makeFoundationURL().absoluteString,
                 "meta": relatedMeta.makeJSON()
                 ])
         } else {
-            relatedJson = JSON(Node(relatedLink))
+            relatedJson = try JSON(Node(relatedLink.makeFoundationURL().absoluteString))
         }
 
         return try JSON(node: [

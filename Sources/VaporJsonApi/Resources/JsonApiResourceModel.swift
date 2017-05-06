@@ -8,32 +8,49 @@
 
 import Vapor
 import HTTP
+import Fluent
 
-public protocol JsonApiResourceModel: Model {
+public class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
 
-    typealias JsonApiAttributes = [String: JSON?]
-    typealias JsonApiRelationships = [String: JsonApiResourceModel.Type]
+    // MARK: - JsonApiResourceRepresentable stubs
 
-    var resourceType: JsonApiResourceType { get }
+    public static var resourceType: JsonApiResourceType {
+        return ""
+    }
 
-    func attributes() throws -> JsonApiAttributes
+    public func attributes() throws -> JsonApiAttributes {
+        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'JsonApiResourceModel' must implement attributes()")
+    }
 
-    func relationships() throws -> JsonApiRelationships
-}
+    public func parentRelationships() throws -> JsonApiParentRelationships {
+        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'JsonApiResourceModel' must implement parentRelationships()")
+    }
 
-public extension JsonApiResourceModel {
+    public func childrenRelationships() throws -> JsonApiChildrenRelationships {
+        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'JsonApiResourceModel' must implement childrenRelationships()")
+    }
 
-    public func makeResourceObject() throws -> JsonApiResourceObject {
-        guard let id = self.id?.string else {
-            throw JsonApiInternalServerError(title: "Internal Server Error", detail: "A fetched model does not seem to have a valid id.")
-        }
-        let attributes = JsonApiAttributesObject(attributes: try JSON(node: self.attributes()))
-        /*
-        let relationships = JsonApiRelationshipsObject(relationshipObjects: [])
-        let resourceObject = JsonApiResourceObject(id: id, type: resourceType, attributes: attributes, relationships: relationships, links: links, meta: meta)
-         */
+    public func siblingsRelationships() throws -> JsonApiSiblingsRelationships {
+        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'JsonApiResourceModel' must implement siblingsRelationships()")
+    }
 
-        // TODO: Finish implementing makeResourceObject
-        throw JsonApiInternalServerError()
+    // MARK: - Model stubs
+
+    public var id: Node?
+
+    public required init(node: Node, in context: Context) throws {
+        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement init(node:in context)")
+    }
+
+    public func makeNode(context: Context) throws -> Node {
+        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement makeNode()")
+    }
+
+    public static func prepare(_ database: Database) throws {
+        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement prepare(_:)")
+    }
+
+    public static func revert(_ database: Database) throws {
+        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement revert(_:)")
     }
 }
