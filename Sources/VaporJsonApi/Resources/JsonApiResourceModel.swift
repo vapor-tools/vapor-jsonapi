@@ -38,6 +38,8 @@ open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
 
     open var id: Node?
 
+    public init() {}
+
     public required init(node: Node, in context: Context) throws {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement init(node:in context)")
     }
