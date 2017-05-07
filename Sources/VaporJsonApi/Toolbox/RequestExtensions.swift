@@ -57,6 +57,16 @@ extension Request {
 
         return accept.value
     }
+
+    func contentTypeHeaderValue() -> String? {
+        guard let accept = self.headers.first(where: { (key, value) -> Bool in
+            return key == HeaderKey.contentType
+        }) else {
+            return nil
+        }
+
+        return accept.value
+    }
 }
 
 extension Request {

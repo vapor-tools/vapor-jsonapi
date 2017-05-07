@@ -15,7 +15,7 @@ open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
     // MARK: - JsonApiResourceRepresentable stubs
 
     open class var resourceType: JsonApiResourceType {
-        return ""
+        fatalError("Subclasses of JsonApiResourceModel MUST implement 'class var resourceType'")
     }
 
     open func attributes() throws -> JsonApiAttributes {
@@ -40,9 +40,18 @@ open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
 
     public init() {}
 
-    public required init(node: Node, in context: Context) throws {
-        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement init(node:in context)")
-    }
+    /**
+     * Initializes all required and optional attributes from the given `node`, runs validations and
+     * throws if these validations are not satisfied.
+     *
+     * `id` will not be available inside `node` as this initializer will only be called to create
+     * new resources. Subclasses may not require an id value for this initializer.
+     *
+     * - parameter node: A node element where all of the attributes are stored.
+     */
+    public required init(node: Node) throws {}
+
+    public required init(node: Node, in context: Context) throws {}
 
     open func makeNode(context: Context) throws -> Node {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement makeNode()")

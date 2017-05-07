@@ -352,3 +352,14 @@ public class JsonApiInvalidPageValueError: JsonApiGeneralError {
         self.init(title: "Invalid page value", detail: "\(value) is not a valid value for \(page) page parameter.")
     }
 }
+
+public class JsonApiTypeConflictError: JsonApiGeneralError {
+
+    public init(title: String, detail: String) {
+        super.init(status: Status.conflict, code: String(Status.conflict.statusCode), title: title, detail: detail)
+    }
+
+    public convenience init(type: String) {
+        self.init(title: "Invalid type value", detail: "\(type) is not a valid type value.")
+    }
+}

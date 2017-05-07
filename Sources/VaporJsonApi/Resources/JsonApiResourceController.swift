@@ -8,6 +8,7 @@
 
 import Vapor
 import HTTP
+import Fluent
 
 public protocol JsonApiResourceController {
     associatedtype Resource: JsonApiResourceModel
@@ -51,5 +52,71 @@ public extension JsonApiResourceController {
         let document = JsonApiDocument(data: data)
 
         return JsonApiResponse(status: .ok, document: document)
+    }
+
+    /**
+     * The `getResource` method is responsible for get requests to a specific resource.
+     *
+     * Example: `/articles/5` for the article resource.
+     *
+     * - parameter req: The `Request` which fired this method.
+     * - parameter id: The id represented as a String which is the first and only route parameter for this request.
+     */
+    func getResource(_ req: Request, _ id: String) throws -> ResponseRepresentable {
+
+        guard req.fulfillsJsonApiAcceptResponsibilities() else {
+            throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
+        }
+
+        // let query = req.jsonApiQuery()
+
+        guard let resource = try Resource.find(id) else {
+            throw JsonApiRecordNotFoundError(id: id)
+        }
+
+        let resourceObject = try resource.makeResourceObject(resourceModel: resource, baseUrl: req.uri)
+
+        let data = JsonApiData(resourceObject: resourceObject)
+        let document = JsonApiDocument(data: data)
+
+        return JsonApiResponse(status: .ok, document: document)
+    }
+
+    /**
+     * The `postResource` method is responsible for post requests to a specific resource.
+     *
+     * Example: `/articles` for creating an article resource.
+     *
+     * - parameter req: The `Request` which fired this method.
+     */
+    func postResource(_ req: Request) throws -> ResponseRepresentable {
+
+        guard req.fulfillsJsonApiAcceptResponsibilities() else {
+            throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
+        }
+
+        guard req.fulfillsJsonApiContentTypeResponsibilities() else {
+            throw JsonApiUnsupportedMediaTypeError(mediaType: req.contentTypeHeaderValue() ?? "*No Content-Type header*")
+        }
+
+        guard let type = req.json?["type"]?.string else {
+            throw JsonApiParameterMissingError(parameter: "type")
+        }
+        guard type == Resource.resourceType.parse() else {
+            throw JsonApiTypeConflictError(type: type)
+        }
+
+        let node = req.json?["data"]?["attributes"]?.makeNode()
+        var resource = try Resource(node: node)
+        // TODO: Set relationships
+        try resource.save()
+
+        // Return newly saved object as jsonapi resource
+        let resourceObject = try resource.makeResourceObject(resourceModel: resource, baseUrl: req.uri)
+
+        let data = JsonApiData(resourceObject: resourceObject)
+        let document = JsonApiDocument(data: data)
+
+        return JsonApiResponse(status: .created, document: document)
     }
 }

@@ -14,9 +14,9 @@ public protocol JsonApiResourceRepresentable {
 
     typealias JsonApiAttributes = [String: (getter: () throws -> NodeRepresentable?, setter: (_ value: NodeRepresentable) throws -> ())]
 
-    typealias JsonApiParentRelationships = [String: (type: JsonApiResourceModel.Type, getter: () throws -> Parent<JsonApiResourceModel>)]
+    typealias JsonApiParentRelationships = [String: JsonApiParentModel<JsonApiResourceModel>]
 
-    typealias JsonApiChildrenRelationships = [String: (type: JsonApiResourceModel.Type, getter: () throws -> Children<JsonApiResourceModel>)]
+    typealias JsonApiChildrenRelationships = [String: JsonApiChildrenModel<JsonApiResourceModel>]
 
     typealias JsonApiSiblingsRelationships = [String: (type: JsonApiResourceModel.Type, getter: () throws -> Siblings<JsonApiResourceModel>)]
 
