@@ -157,13 +157,13 @@ public class JsonApiRelationshipObject: JSONRepresentable {
 
 public class JsonApiLinksObject: JSONRepresentable {
 
-    public let selfLink: URI
+    public let selfLink: URI?
     public let selfMeta: JsonApiMeta?
 
-    public let relatedLink: URI
+    public let relatedLink: URI?
     public let relatedMeta: JsonApiMeta?
 
-    public init(selfLink: URI, selfMeta: JsonApiMeta? = nil, relatedLink: URI, relatedMeta: JsonApiMeta? = nil) {
+    public init(selfLink: URI? = nil, selfMeta: JsonApiMeta? = nil, relatedLink: URI? = nil, relatedMeta: JsonApiMeta? = nil) {
         self.selfLink = selfLink
         self.selfMeta = selfMeta
 
@@ -172,30 +172,37 @@ public class JsonApiLinksObject: JSONRepresentable {
     }
 
     public func makeJSON() throws -> JSON {
-        let selfJson: JSON
-        if let selfMeta = selfMeta {
-            selfJson = try JSON(node: [
-                "href": try selfLink.makeFoundationURL().absoluteString,
-                "meta": selfMeta.makeJSON()
-                ])
-        } else {
-            selfJson = try JSON(Node(selfLink.makeFoundationURL().absoluteString))
+        var json = JSON([:])
+
+        if let selfLink = selfLink {
+            let selfJson: JSON
+            if let selfMeta = selfMeta {
+                selfJson = try JSON(node: [
+                    "href": try selfLink.makeFoundationURL().absoluteString,
+                    "meta": selfMeta.makeJSON()
+                    ])
+            } else {
+                selfJson = try JSON(Node(selfLink.makeFoundationURL().absoluteString))
+            }
+
+            json["self"] = selfJson
         }
 
-        let relatedJson: JSON
-        if let relatedMeta = relatedMeta {
-            relatedJson = try JSON(node: [
-                "href": try relatedLink.makeFoundationURL().absoluteString,
-                "meta": relatedMeta.makeJSON()
-                ])
-        } else {
-            relatedJson = try JSON(Node(relatedLink.makeFoundationURL().absoluteString))
+        if let relatedLink = relatedLink {
+            let relatedJson: JSON
+            if let relatedMeta = relatedMeta {
+                relatedJson = try JSON(node: [
+                    "href": try relatedLink.makeFoundationURL().absoluteString,
+                    "meta": relatedMeta.makeJSON()
+                    ])
+            } else {
+                relatedJson = try JSON(Node(relatedLink.makeFoundationURL().absoluteString))
+            }
+
+            json["related"] = relatedJson
         }
 
-        return try JSON(node: [
-            "self": selfJson,
-            "related": relatedJson
-            ])
+        return json
     }
 }
 

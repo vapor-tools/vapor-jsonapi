@@ -19,22 +19,18 @@ public struct JsonApiParentModel<T: JsonApiResourceModel> {
     }
 
     public let getter: JsonApiParentGetter
-    public let setter: JsonApiParentSetter
+    public let setter: JsonApiParentSetter?
 
-    public init(getter: @escaping JsonApiParentGetter, setter: @escaping JsonApiParentSetter) {
+    public init(getter: @escaping JsonApiParentGetter, setter: JsonApiParentSetter? = nil) {
         self.getter = getter
         self.setter = setter
     }
 
-    public init<C: JsonApiResourceModel>(child: C, parentId: Node, foreignKey: String?) {
+    public init(child: JsonApiResourceModel, parentId: Node, foreignKey: String? = nil, setter: JsonApiParentSetter? = nil) {
         getter = {
             return try child.parent(parentId, foreignKey, T.self)
         }
 
-        setter = { parent in
-            let p = Parent<T>(child: child, parentId: parentId, foreignKey: foreignKey)
-            var par = try p.get()
-            try par?.save()
-        }
+        self.setter = setter
     }
 }

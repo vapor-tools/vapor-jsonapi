@@ -65,6 +65,17 @@ public class JsonApiRecordNotFoundError: JsonApiGeneralError {
     }
 }
 
+public class JsonApiRelationshipNotFoundError: JsonApiGeneralError {
+
+    public init(title: String, detail: String) {
+        super.init(status: Status.notFound, code: String(Status.notFound.statusCode), title: title, detail: detail)
+    }
+
+    public convenience init(relationship: String) {
+        self.init(title: "Relationship not found", detail: "The relationship identified by \(relationship) could not be found.")
+    }
+}
+
 public class JsonApiUnsupportedMediaTypeError: JsonApiGeneralError {
 
     public init(title: String, detail: String) {

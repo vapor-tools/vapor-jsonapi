@@ -9,6 +9,7 @@
 import Vapor
 import HTTP
 import Fluent
+import URI
 
 public protocol JsonApiResourceController {
     associatedtype Resource: JsonApiResourceModel
@@ -33,25 +34,14 @@ public extension JsonApiResourceController {
 
         let query = req.jsonApiQuery()
 
-        let pageCount = query["page"]?["size"]?.string?.int ?? JsonApiConfig.defaultPageSize
-        if pageCount > JsonApiConfig.maximumPageSize {
-            throw JsonApiInvalidPageValueError(page: "page[size]", value: query["page"]?["size"]?.string ?? "*Nothing*")
-        }
-        let pageNumber = query["page"]?["number"]?.string?.int ?? 1
-        if pageNumber < 1 {
-            throw JsonApiInvalidPageValueError(page: "page[number]", value: query["page"]?["number"]?.string ?? "*Nothing*")
-        }
+        let page = try pageForQuery(query: query)
+        let pageNumber = page.pageNumber
+        let pageCount = page.pageCount
+
         let resources = try Resource.query().limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
+        let jsonDocument = try document(forResources: resources, baseUrl: req.uri)
 
-        var resourceObjects = [JsonApiResourceObject]()
-        for r in resources {
-            resourceObjects.append(try r.makeResourceObject(resourceModel: r, baseUrl: req.uri))
-        }
-
-        let data = JsonApiData(resourceObjects: resourceObjects)
-        let document = JsonApiDocument(data: data)
-
-        return JsonApiResponse(status: .ok, document: document)
+        return JsonApiResponse(status: .ok, document: jsonDocument)
     }
 
     /**
@@ -80,6 +70,65 @@ public extension JsonApiResourceController {
         let document = JsonApiDocument(data: data)
 
         return JsonApiResponse(status: .ok, document: document)
+    }
+
+    /**
+     * The `getRelatedResource` method is responsible for get requests to a relationship of a specific resource.
+     *
+     * Example: `/articles/5/author` for the author resource of the article with id `5`.
+     *
+     * - parameter req: The `Request` which fired this method.
+     * - parameter id: The id represented as a String which is the first route parameter for this request.
+     * - parameter relationshipType: The relationshipType represented as a String which is the relationship name as defined in the JsonApiResourceModel.
+     */
+    func getRelatedResource(_ req: Request, _ id: String, _ relationshipType: String) throws -> ResponseRepresentable {
+
+        guard req.fulfillsJsonApiAcceptResponsibilities() else {
+            throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
+        }
+
+        guard let resource = try Resource.find(id) else {
+            throw JsonApiRecordNotFoundError(id: id)
+        }
+
+        let query = req.jsonApiQuery()
+
+        if let parentModel = try resource.parentRelationships()[relationshipType] {
+            if let parent = try parentModel.getter().get() {
+                let resourceObject = try parent.makeResourceObject(resourceModel: parent, baseUrl: req.uri)
+                let data = JsonApiData(resourceObject: resourceObject)
+                let document = JsonApiDocument(data: data)
+
+                return JsonApiResponse(status: .ok, document: document)
+            } else {
+                let document = JsonApiDocument()
+                return JsonApiResponse(status: .ok, document: document)
+            }
+        } else if let childrenCollection = try resource.childrenRelationships()[relationshipType] {
+            let children = try childrenCollection.getter()
+
+            let page = try pageForQuery(query: query)
+            let pageNumber = page.pageNumber
+            let pageCount = page.pageCount
+
+            let resources = try children.limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
+            let jsonDocument = try document(forResources: resources, baseUrl: req.uri)
+
+            return JsonApiResponse(status: .ok, document: jsonDocument)
+        } else if let siblingsCollection = try resource.siblingsRelationships()[relationshipType] {
+            let siblings = try siblingsCollection.getter()
+
+            let page = try pageForQuery(query: query)
+            let pageNumber = page.pageNumber
+            let pageCount = page.pageCount
+
+            let resources = try siblings.limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
+            let jsonDocument = try document(forResources: resources, baseUrl: req.uri)
+
+            return JsonApiResponse(status: .ok, document: jsonDocument)
+        }
+
+        throw JsonApiRelationshipNotFoundError(relationship: relationshipType)
     }
 
     /**
@@ -118,5 +167,31 @@ public extension JsonApiResourceController {
         let document = JsonApiDocument(data: data)
 
         return JsonApiResponse(status: .created, document: document)
+    }
+}
+
+fileprivate extension JsonApiResourceController {
+
+    fileprivate func pageForQuery(query: JSON) throws -> (pageCount: Int, pageNumber: Int) {
+        let pageCount = query["page"]?["size"]?.string?.int ?? JsonApiConfig.defaultPageSize
+        if pageCount > JsonApiConfig.maximumPageSize {
+            throw JsonApiInvalidPageValueError(page: "page[size]", value: query["page"]?["size"]?.string ?? "*Nothing*")
+        }
+        let pageNumber = query["page"]?["number"]?.string?.int ?? 1
+        if pageNumber < 1 {
+            throw JsonApiInvalidPageValueError(page: "page[number]", value: query["page"]?["number"]?.string ?? "*Nothing*")
+        }
+
+        return (pageCount: pageCount, pageNumber: pageNumber)
+    }
+
+    fileprivate func document(forResources resources: [JsonApiResourceModel], baseUrl: URI) throws -> JsonApiDocument {
+        var resourceObjects = [JsonApiResourceObject]()
+        for r in resources {
+            resourceObjects.append(try r.makeResourceObject(resourceModel: r, baseUrl: baseUrl))
+        }
+
+        let data = JsonApiData(resourceObjects: resourceObjects)
+        return JsonApiDocument(data: data)
     }
 }

@@ -20,12 +20,34 @@ public struct JsonApiSiblingsModel<T: JsonApiResourceModel> {
     }
 
     public let getter: JsonApiSiblingsGetter
-    public let adder: JsonApiSiblingsAdder
+    public let adder: JsonApiSiblingsAdder?
     public let replacer: JsonApiSiblingsReplacer?
 
-    public init(getter: @escaping JsonApiSiblingsGetter, adder: @escaping JsonApiSiblingsAdder, replacer: JsonApiSiblingsReplacer? = nil) {
+    public init(getter: @escaping JsonApiSiblingsGetter, adder: JsonApiSiblingsAdder? = nil, replacer: JsonApiSiblingsReplacer? = nil) {
         self.getter = getter
         self.adder = adder
         self.replacer = replacer
+    }
+
+    public init<S: JsonApiResourceModel>(toSibling: S, localKey: String? = nil, foreignKey: String? = nil) {
+        getter = {
+            return try toSibling.siblings(localKey, foreignKey)
+        }
+
+        // TODO: Don't allow duplicate linkage
+        self.adder = { siblings in
+            for s in siblings {
+                var p = Pivot<S, T>(toSibling, s)
+                try p.save()
+            }
+        }
+        self.replacer = { siblings in
+            let oldSiblings: Siblings<T> = try toSibling.siblings(localKey, foreignKey)
+            try oldSiblings.delete()
+            for s in siblings {
+                var p = Pivot<S, T>(toSibling, s)
+                try p.save()
+            }
+        }
     }
 }

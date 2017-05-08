@@ -10,9 +10,21 @@ import Vapor
 
 public class JsonApiDocument: JSONRepresentable {
 
+    public fileprivate(set) var nilData: Bool = false
     public let data: JsonApiData?
     public let errors: [JsonApiErrorObject]?
     public let meta: JsonApiMeta?
+
+    /**
+     * Nil data initializer
+     *
+     */
+    public init(meta: JsonApiMeta? = nil) {
+        self.nilData = true
+        self.data = nil
+        self.meta = meta
+        self.errors = nil
+    }
 
     public init(data: JsonApiData, meta: JsonApiMeta? = nil) {
         self.data = data
@@ -39,6 +51,8 @@ public class JsonApiDocument: JSONRepresentable {
                 jsonErrors.append(try error.makeJSON())
             }
             json["errors"] = JSON(jsonErrors)
+        } else if nilData {
+            json["data"] = JSON(Node(nilLiteral: ()))
         } else {
 
             // This should really *never* happens because of the unambiguous initializers but this

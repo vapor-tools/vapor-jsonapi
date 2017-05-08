@@ -18,7 +18,7 @@ public protocol JsonApiResourceRepresentable {
 
     typealias JsonApiChildrenRelationships = [String: JsonApiChildrenModel<JsonApiResourceModel>]
 
-    typealias JsonApiSiblingsRelationships = [String: (type: JsonApiResourceModel.Type, getter: () throws -> Siblings<JsonApiResourceModel>)]
+    typealias JsonApiSiblingsRelationships = [String: JsonApiSiblingsModel<JsonApiResourceModel>]
 
     static var resourceType: JsonApiResourceType { get }
 
@@ -100,8 +100,11 @@ public extension JsonApiResourceRepresentable {
             relationshipObjects.append(try makeSiblingsRelationshipObject(name: s.key, type: s.value.type, getter: s.value.getter, baseUrl: baseUrl, resourcePath: resourcePath))
         }
 
+        let selfLink = URI(scheme: baseUrl.scheme, host: baseUrl.host, port: baseUrl.port, path: "\(resourcePath)")
+        let links = JsonApiLinksObject(selfLink: selfLink)
+
         let relationshipsObject = JsonApiRelationshipsObject(relationshipObjects: relationshipObjects)
-        return JsonApiResourceObject(id: id, type: type, attributes: attributesObject, relationships: relationshipsObject)
+        return JsonApiResourceObject(id: id, type: type, attributes: attributesObject, relationships: relationshipsObject, links: links)
     }
 
     public func makeResourceIdentifierObject(resourceModel: JsonApiResourceModel, meta: JsonApiMeta?) throws -> JsonApiResourceIdentifierObject {
