@@ -9,28 +9,28 @@
 import Vapor
 import Fluent
 
-public struct JsonApiParentModel<T: JsonApiResourceModel> {
+public struct JsonApiParentModel {
 
-    public typealias JsonApiParentGetter = () throws -> Parent<T>
-    public typealias JsonApiParentSetter = (_ parent: T) throws -> ()
+    public typealias JsonApiParentGetter = () throws -> Parent<JsonApiResourceModel>
+    public typealias JsonApiParentSetter = (_ parent: JsonApiResourceModel) throws -> ()
 
-    public var type: JsonApiResourceModel.Type {
-        return T.self
-    }
+    public var type: JsonApiResourceModel.Type
 
     public let getter: JsonApiParentGetter
     public let setter: JsonApiParentSetter?
 
-    public init(getter: @escaping JsonApiParentGetter, setter: JsonApiParentSetter? = nil) {
+    public init(type: JsonApiResourceModel.Type, getter: @escaping JsonApiParentGetter, setter: JsonApiParentSetter? = nil) {
         self.getter = getter
         self.setter = setter
+        self.type = type
     }
 
-    public init(child: JsonApiResourceModel, parentId: Node, foreignKey: String? = nil, setter: JsonApiParentSetter? = nil) {
+    public init(type: JsonApiResourceModel.Type, child: JsonApiResourceModel, parentId: Node, foreignKey: String? = nil, setter: JsonApiParentSetter? = nil) {
         getter = {
-            return try child.parent(parentId, foreignKey, T.self)
+            return try child.parent(parentId, foreignKey, type)
         }
 
         self.setter = setter
+        self.type = type
     }
 }
