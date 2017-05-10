@@ -159,14 +159,14 @@ public extension JsonApiResourceController {
             throw JsonApiUnsupportedMediaTypeError(mediaType: req.contentTypeHeaderValue() ?? "*No Content-Type header*")
         }
 
-        guard let type = req.jsonApiJson?["type"]?.string else {
+        let bodyData = req.jsonApiJson?["data"]
+
+        guard let type = bodyData?["type"]?.string else {
             throw JsonApiParameterMissingError(parameter: "type")
         }
         guard type == Resource.resourceType.parse() else {
             throw JsonApiTypeConflictError(type: type)
         }
-
-        let bodyData = req.jsonApiJson?["data"]
 
         let node = bodyData?["attributes"]?.makeNode()
         var resource = try Resource(node: node)
