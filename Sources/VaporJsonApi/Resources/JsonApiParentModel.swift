@@ -24,4 +24,12 @@ public struct JsonApiParentModel {
         self.setter = setter
         self.type = parentType
     }
+
+    public init(model: JsonApiResourceModel, foreignId: Node?, foreignKey: String? = nil, parentType: JsonApiResourceModel.Type, setter: JsonApiParentSetter? = nil) throws {
+        self.getter = {
+            return try model.parent(foreignId, foreignKey, parentType).get()
+        }
+        self.setter = setter
+        self.type = parentType
+    }
 }
