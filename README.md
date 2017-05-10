@@ -1,4 +1,4 @@
-# Vapor JsonApi
+# VaporJsonApi
 
 A server side [jsonapi](http://jsonapi.org/) implementation for [vapor](https://github.com/vapor/vapor) (server side swift).
 
