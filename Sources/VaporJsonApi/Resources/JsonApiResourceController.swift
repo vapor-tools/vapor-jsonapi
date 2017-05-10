@@ -171,10 +171,33 @@ public extension JsonApiResourceController {
         let node = bodyData?["attributes"]?.makeNode()
         var resource = try Resource(node: node)
 
-        // TODO: Set relationships
+        // TODO: Check jsonapi document for correct to-many relationship handling
         if let relationships = bodyData?["relationships"]?.object {
             for r in relationships {
-                
+                // Get relationships
+                let parents = try resource.parentRelationships()
+                let children = try resource.childrenRelationships()
+                let siblings = try resource.siblingsRelationships()
+
+                if let parent = parents[r.key] {
+                    guard let id = r.value.object?["id"]?.string, let type = r.value.object?["type"]?.string else {
+                        throw JsonApiBadRequestError(title: "Bad Request", detail: "The relationship \(r.key) must have a type and id value.")
+                    }
+                    guard let p = try parent.type.find(id) else {
+                        throw JsonApiRecordNotFoundError(id: id)
+                    }
+                    guard let setter = parent.setter else {
+                        throw JsonApiRelationshipNotAllowedError(relationship: type)
+                    }
+
+                    try setter(p)
+                } else if let _ = children[r.key] {
+                    throw JsonApiBadRequestError(title: "Setting to-many relationships not allowed", detail: "You set to-many relationships in the same step as creating a resource right now. You tried to set \(r.key) for this resource.")
+                } else if let _ = siblings[r.key] {
+                    throw JsonApiBadRequestError(title: "Setting to-many relationships not allowed", detail: "You set to-many relationships in the same step as creating a resource right now. You tried to set \(r.key) for this resource.")
+                } else {
+                    throw JsonApiRelationshipNotAllowedError(relationship: r.key)
+                }
             }
         }
         try resource.save()

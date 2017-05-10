@@ -276,6 +276,17 @@ public class JsonApiParameterNotAllowedError: JsonApiGeneralError {
     }
 }
 
+public class JsonApiRelationshipNotAllowedError: JsonApiGeneralError {
+
+    public init(title: String, detail: String) {
+        super.init(status: Status.badRequest, code: String(Status.badRequest.statusCode), title: title, detail: detail)
+    }
+
+    public convenience init(relationship: String) {
+        self.init(title: "Relationship not allowed", detail: "\(relationship) is not allowed.")
+    }
+}
+
 public class JsonApiParameterMissingError: JsonApiGeneralError {
 
     public init(title: String, detail: String) {
