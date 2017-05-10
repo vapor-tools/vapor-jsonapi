@@ -99,22 +99,17 @@ public extension JsonApiResourceController {
         let query = req.jsonApiQuery()
 
         if let parentModel = try resource.parentRelationships()[relationshipType] {
-            print("PARENT***")
             if let parent = try parentModel.getter().get() {
                 let resourceObject = try parent.makeResourceObject(resourceModel: parent, baseUrl: req.uri)
                 let data = JsonApiData(resourceObject: resourceObject)
                 let document = JsonApiDocument(data: data)
 
-                print("UPPER***")
-
                 return JsonApiResponse(status: .ok, document: document)
             } else {
-                print("LOWER***")
                 let document = JsonApiDocument()
                 return JsonApiResponse(status: .ok, document: document)
             }
         } else if let childrenCollection = try resource.childrenRelationships()[relationshipType] {
-            print("CHILDREN***")
             let children = try childrenCollection.getter()
 
             let page = try pageForQuery(query: query)
@@ -127,7 +122,6 @@ public extension JsonApiResourceController {
             return JsonApiResponse(status: .ok, document: jsonDocument)
         } else if let siblingsCollection = try resource.siblingsRelationships()[relationshipType] {
             let siblings = try siblingsCollection.getter()
-            print("SIBLINGS***")
 
             let page = try pageForQuery(query: query)
             let pageNumber = page.pageNumber
