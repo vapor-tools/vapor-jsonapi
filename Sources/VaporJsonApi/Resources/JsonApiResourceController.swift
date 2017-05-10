@@ -116,7 +116,9 @@ public extension JsonApiResourceController {
             let pageNumber = page.pageNumber
             let pageCount = page.pageCount
 
-            let resources = try children.limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
+            // TODO: Pagination
+            // let resources = try children.limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
+            let resources = children
             let jsonDocument = try document(forResources: resources, baseUrl: req.uri)
 
             return JsonApiResponse(status: .ok, document: jsonDocument)
@@ -127,7 +129,9 @@ public extension JsonApiResourceController {
             let pageNumber = page.pageNumber
             let pageCount = page.pageCount
 
-            let resources = try siblings.limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
+            // TODO: Pagination
+            // let resources = try siblings.limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
+            let resources = siblings
             let jsonDocument = try document(forResources: resources, baseUrl: req.uri)
 
             return JsonApiResponse(status: .ok, document: jsonDocument)

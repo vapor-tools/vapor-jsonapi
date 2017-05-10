@@ -16,9 +16,9 @@ public protocol JsonApiResourceRepresentable {
 
     typealias JsonApiParentRelationships = [String: JsonApiParentModel]
 
-    typealias JsonApiChildrenRelationships = [String: JsonApiChildrenModel<JsonApiResourceModel>]
+    typealias JsonApiChildrenRelationships = [String: JsonApiChildrenModel]
 
-    typealias JsonApiSiblingsRelationships = [String: JsonApiSiblingsModel<JsonApiResourceModel>]
+    typealias JsonApiSiblingsRelationships = [String: JsonApiSiblingsModel]
 
     static var resourceType: JsonApiResourceType { get }
 
@@ -143,7 +143,7 @@ public extension JsonApiResourceRepresentable {
     public func makeChildrenRelationshipObject (
         name: String,
         type: JsonApiResourceModel.Type,
-        getter: (() throws -> Children<JsonApiResourceModel>)? = nil,
+        getter: (() throws -> [JsonApiResourceModel])? = nil,
         baseUrl: URI,
         resourcePath: String,
         meta: JsonApiMeta? = nil,
@@ -154,7 +154,7 @@ public extension JsonApiResourceRepresentable {
         // TODO: Pagination
         var resourceLinkage: JsonApiResourceLinkage? = nil
         if data {
-            if let children = try getter?().all() {
+            if let children = try getter?() {
                 var resourceIdentifierObjects = [JsonApiResourceIdentifierObject]()
                 for c in children {
                     guard let id = c.id?.string ?? c.id?.int?.string else {
@@ -173,7 +173,7 @@ public extension JsonApiResourceRepresentable {
     public func makeSiblingsRelationshipObject (
         name: String,
         type: JsonApiResourceModel.Type,
-        getter: (() throws -> Siblings<JsonApiResourceModel>)? = nil,
+        getter: (() throws -> [JsonApiResourceModel])? = nil,
         baseUrl: URI,
         resourcePath: String,
         meta: JsonApiMeta? = nil,
@@ -184,7 +184,7 @@ public extension JsonApiResourceRepresentable {
         // TODO: Pagination
         var resourceLinkage: JsonApiResourceLinkage? = nil
         if data {
-            if let siblings = try getter?().all() {
+            if let siblings = try getter?() {
                 var resourceIdentifierObjects = [JsonApiResourceIdentifierObject]()
                 for s in siblings {
                     guard let id = s.id?.string ?? s.id?.int?.string else {
