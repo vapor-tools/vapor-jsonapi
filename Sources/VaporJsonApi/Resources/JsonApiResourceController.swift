@@ -99,7 +99,7 @@ public extension JsonApiResourceController {
         let query = req.jsonApiQuery()
 
         if let parentModel = try resource.parentRelationships()[relationshipType] {
-            if let parent = try parentModel.getter().get() {
+            if let parent = try parentModel.getter() {
                 let resourceObject = try parent.makeResourceObject(resourceModel: parent, baseUrl: req.uri)
                 let data = JsonApiData(resourceObject: resourceObject)
                 let document = JsonApiDocument(data: data)

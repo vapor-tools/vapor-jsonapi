@@ -117,7 +117,7 @@ public extension JsonApiResourceRepresentable {
     public func makeParentRelationshipObject (
         name: String,
         type: JsonApiResourceModel.Type,
-        getter: (() throws -> Parent<JsonApiResourceModel>)? = nil,
+        getter: (() throws -> JsonApiResourceModel?)? = nil,
         baseUrl: URI,
         resourcePath: String,
         meta: JsonApiMeta? = nil,
@@ -128,7 +128,7 @@ public extension JsonApiResourceRepresentable {
         // TDOD: Resource linkage with "nil" as data: Must also be handled
         var resourceLinkage: JsonApiResourceLinkage? = nil
         if data {
-            if let parent = try getter?().get() {
+            if let parent = try getter?() {
                 guard let parentId = parent.id?.string ?? parent.id?.int?.string else {
                     throw JsonApiInternalServerError(title: "Internal Server Error", detail: "A fetched model does not seem to have a valid id.")
                 }
