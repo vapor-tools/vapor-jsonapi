@@ -11,7 +11,7 @@ import Fluent
 
 public struct JsonApiChildrenModel {
 
-    public typealias JsonApiChildrenGetter = () throws -> [JsonApiResourceModel]
+    public typealias JsonApiChildrenGetter = (_ paginator: JsonApiPaginator) throws -> [JsonApiResourceModel]
     public typealias JsonApiChildrenAdder = ([JsonApiResourceModel]) throws -> ()
     public typealias JsonApiChildrenReplacer = ([JsonApiResourceModel]) throws -> ()
 

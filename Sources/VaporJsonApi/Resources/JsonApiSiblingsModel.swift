@@ -11,7 +11,7 @@ import Fluent
 
 public struct JsonApiSiblingsModel {
 
-    public typealias JsonApiSiblingsGetter = () throws -> [JsonApiResourceModel]
+    public typealias JsonApiSiblingsGetter = (_ paginator: JsonApiPaginator) throws -> [JsonApiResourceModel]
     public typealias JsonApiSiblingsAdder = ([JsonApiResourceModel]) throws -> ()
     public typealias JsonApiSiblingsReplacer = ([JsonApiResourceModel]) throws -> ()
 
@@ -29,8 +29,8 @@ public struct JsonApiSiblingsModel {
     }
 
     public init<S: JsonApiResourceModel, T: JsonApiResourceModel>(model: S, siblingType: T.Type, localKey: String? = nil, foreignKey: String? = nil) {
-        getter = {
-            let elements: [S] = try model.siblings(localKey, foreignKey).all()
+        getter = { paginator in
+            let elements: [S] = try model.siblings(localKey, foreignKey).limit(paginator.pageCount, withOffset: paginator.pageOffset).all()
             return elements
         }
 

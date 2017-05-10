@@ -143,7 +143,7 @@ public extension JsonApiResourceRepresentable {
     public func makeChildrenRelationshipObject (
         name: String,
         type: JsonApiResourceModel.Type,
-        getter: (() throws -> [JsonApiResourceModel])? = nil,
+        getter: ((_ paginator: JsonApiPaginator) throws -> [JsonApiResourceModel])? = nil,
         baseUrl: URI,
         resourcePath: String,
         meta: JsonApiMeta? = nil,
@@ -151,10 +151,10 @@ public extension JsonApiResourceRepresentable {
         ) throws -> JsonApiRelationshipObject {
         let links = self.relationshipLinks(name: name, baseUrl: baseUrl, resourcePath: resourcePath)
 
-        // TODO: Pagination
         var resourceLinkage: JsonApiResourceLinkage? = nil
         if data {
-            if let children = try getter?() {
+            // TODO: Dynamic page size and count
+            if let children = try getter?(JsonApiPagedPaginator(pageCount: 1, pageSize: 50)) {
                 var resourceIdentifierObjects = [JsonApiResourceIdentifierObject]()
                 for c in children {
                     guard let id = c.id?.string ?? c.id?.int?.string else {
@@ -173,7 +173,7 @@ public extension JsonApiResourceRepresentable {
     public func makeSiblingsRelationshipObject (
         name: String,
         type: JsonApiResourceModel.Type,
-        getter: (() throws -> [JsonApiResourceModel])? = nil,
+        getter: ((_ paginator: JsonApiPaginator) throws -> [JsonApiResourceModel])? = nil,
         baseUrl: URI,
         resourcePath: String,
         meta: JsonApiMeta? = nil,
@@ -181,10 +181,10 @@ public extension JsonApiResourceRepresentable {
         ) throws -> JsonApiRelationshipObject {
         let links = self.relationshipLinks(name: name, baseUrl: baseUrl, resourcePath: resourcePath)
 
-        // TODO: Pagination
         var resourceLinkage: JsonApiResourceLinkage? = nil
         if data {
-            if let siblings = try getter?() {
+            // TODO: Dynamic page size and count
+            if let siblings = try getter?(JsonApiPagedPaginator(pageCount: 1, pageSize: 50)) {
                 var resourceIdentifierObjects = [JsonApiResourceIdentifierObject]()
                 for s in siblings {
                     guard let id = s.id?.string ?? s.id?.int?.string else {

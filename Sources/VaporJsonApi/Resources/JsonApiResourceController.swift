@@ -19,6 +19,10 @@ public protocol JsonApiResourceController {
 
 public extension JsonApiResourceController {
 
+    public var resourceType: JsonApiResourceType {
+        return Resource.resourceType
+    }
+
     /**
      * The `getResources` method is responsible for get requests to the resource collection.
      *
@@ -110,28 +114,26 @@ public extension JsonApiResourceController {
                 return JsonApiResponse(status: .ok, document: document)
             }
         } else if let childrenCollection = try resource.childrenRelationships()[relationshipType] {
-            let children = try childrenCollection.getter()
 
             let page = try pageForQuery(query: query)
             let pageNumber = page.pageNumber
             let pageCount = page.pageCount
 
-            // TODO: Pagination
-            // let resources = try children.limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
-            let resources = children
+            let paginator = JsonApiPagedPaginator(pageCount: pageCount, pageSize: pageNumber)
+            let resources = try childrenCollection.getter(paginator)
+
             let jsonDocument = try document(forResources: resources, baseUrl: req.uri)
 
             return JsonApiResponse(status: .ok, document: jsonDocument)
         } else if let siblingsCollection = try resource.siblingsRelationships()[relationshipType] {
-            let siblings = try siblingsCollection.getter()
 
             let page = try pageForQuery(query: query)
             let pageNumber = page.pageNumber
             let pageCount = page.pageCount
 
-            // TODO: Pagination
-            // let resources = try siblings.limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
-            let resources = siblings
+            let paginator = JsonApiPagedPaginator(pageCount: pageCount, pageSize: pageNumber)
+            let resources = try siblingsCollection.getter(paginator)
+
             let jsonDocument = try document(forResources: resources, baseUrl: req.uri)
 
             return JsonApiResponse(status: .ok, document: jsonDocument)
@@ -157,16 +159,24 @@ public extension JsonApiResourceController {
             throw JsonApiUnsupportedMediaTypeError(mediaType: req.contentTypeHeaderValue() ?? "*No Content-Type header*")
         }
 
-        guard let type = req.json?["type"]?.string else {
+        guard let type = req.jsonApiJson?["type"]?.string else {
             throw JsonApiParameterMissingError(parameter: "type")
         }
         guard type == Resource.resourceType.parse() else {
             throw JsonApiTypeConflictError(type: type)
         }
 
-        let node = req.json?["data"]?["attributes"]?.makeNode()
+        let bodyData = req.jsonApiJson?["data"]
+
+        let node = bodyData?["attributes"]?.makeNode()
         var resource = try Resource(node: node)
+
         // TODO: Set relationships
+        if let relationships = bodyData?["relationships"]?.object {
+            for r in relationships {
+                
+            }
+        }
         try resource.save()
 
         // Return newly saved object as jsonapi resource

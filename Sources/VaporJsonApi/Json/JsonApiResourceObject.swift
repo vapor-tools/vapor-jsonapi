@@ -101,7 +101,7 @@ public class JsonApiRelationshipsObject: JSONRepresentable {
         var json = try JSON(node: [:])
 
         for relationshipObject in relationshipObjects {
-            json[relationshipObject.name] = try relationshipObjects.makeJSON()
+            json[relationshipObject.name] = try relationshipObject.makeJSON()
         }
 
         return json

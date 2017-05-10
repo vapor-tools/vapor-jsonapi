@@ -9,7 +9,7 @@
 import Vapor
 import HTTP
 
-extension Request {
+extension Message {
 
     // TODO: The media type checking should be done as described in the RFC Guide for media types but for now
     // this is enough...
