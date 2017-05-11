@@ -183,7 +183,7 @@ public extension JsonApiResourceController {
                     guard let id = r.value.object?["id"]?.string, let type = r.value.object?["type"]?.string else {
                         throw JsonApiBadRequestError(title: "Bad Request", detail: "The relationship \(r.key) must have a type and id value.")
                     }
-                    guard let p = try parent.type.find(id) else {
+                    guard let p = try parent.findInModel(id) else {
                         throw JsonApiRecordNotFoundError(id: id)
                     }
                     guard let setter = parent.setter else {
