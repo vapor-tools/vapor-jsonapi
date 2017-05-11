@@ -19,9 +19,15 @@ public struct JsonApiParentModel {
     public let getter: JsonApiParentGetter
     public let setter: JsonApiParentSetter?
 
-    public init(parentType: JsonApiResourceModel.Type, getter: @escaping JsonApiParentGetter, setter: JsonApiParentSetter? = nil) {
+    public let findInModel: (_ id: NodeRepresentable) throws -> JsonApiResourceModel?
+
+    public init<T: JsonApiResourceModel>(parentType: T.Type, getter: @escaping JsonApiParentGetter, setter: JsonApiParentSetter? = nil) {
         self.getter = getter
         self.setter = setter
         self.type = parentType
+
+        self.findInModel = { id in
+            return try T.find(id)
+        }
     }
 }
