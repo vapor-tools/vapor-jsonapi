@@ -16,9 +16,9 @@ public extension Droplet {
         // Get routes
         group(resourceType) { resourceType in
             resourceType.get(handler: controller.getResources)
-            get(String.self, handler: controller.getResource)
-            get(String.self, String.self, handler: controller.getRelatedResource)
-            get(String.self, "relationships", String.self, handler: controller.getRelationships)
+            resourceType.get(String.self, handler: controller.getResource)
+            resourceType.get(String.self, String.self, handler: controller.getRelatedResource)
+            resourceType.get(String.self, "relationships", String.self, handler: controller.getRelationships)
         }
 
         // Post routes
