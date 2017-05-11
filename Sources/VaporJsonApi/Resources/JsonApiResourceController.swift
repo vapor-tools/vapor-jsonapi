@@ -39,10 +39,9 @@ public extension JsonApiResourceController {
         let query = req.jsonApiQuery()
 
         let page = try pageForQuery(query: query)
-        let pageNumber = page.pageNumber
-        let pageCount = page.pageCount
+        let pagination = JsonApiPagedPaginator(pageCount: page.pageCount, pageSize: page.pageNumber)
 
-        let resources = try Resource.query().limit(pageCount, withOffset: (pageNumber * pageCount) - pageCount).all()
+        let resources = try Resource.query().limit(pagination.pageCount, withOffset: pagination.pageOffset).all()
         let jsonDocument = try document(forResources: resources, baseUrl: req.uri)
 
         return JsonApiResponse(status: .ok, document: jsonDocument)
@@ -95,11 +94,6 @@ public extension JsonApiResourceController {
             throw JsonApiRecordNotFoundError(id: id)
         }
 
-        print(id)
-        print(relationshipType)
-        print(try resource.parentRelationships().debugDescription)
-        print(try resource.parentRelationships()[relationshipType] ?? "Nothing!?")
-
         let query = req.jsonApiQuery()
 
         if let parentModel = try resource.parentRelationships()[relationshipType] {
@@ -139,6 +133,67 @@ public extension JsonApiResourceController {
             return JsonApiResponse(status: .ok, document: jsonDocument)
         }
 
+        throw JsonApiRelationshipNotFoundError(relationship: relationshipType)
+    }
+
+    /**
+     * The `getRelationships` method is responsible for get requests to a resource linkage object for a resource.
+     *
+     * Example: `/articles/5/relationships/author` for the author resource linkage of the article with id `5`.
+     *
+     * - parameter req: The `Request` which fired this method.
+     * - parameter id: The id represented as a String which is the first route parameter for this request.
+     * - parameter relationshipType: The relationshipType represented as a String which is the relationship name as defined in the JsonApiResourceModel.
+     */
+    func getRelationships(_ req: Request, _ id: String, _ relationshipType: String) throws -> ResponseRepresentable {
+
+        guard req.fulfillsJsonApiAcceptResponsibilities() else {
+            throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
+        }
+
+        guard let resource = try Resource.find(id) else {
+            throw JsonApiRecordNotFoundError(id: id)
+        }
+
+        let query = req.jsonApiQuery()
+
+        if let parentModel = try resource.parentRelationships()[relationshipType] {
+            if let parent = try parentModel.getter() {
+                let resourceIdentifierObject = try parent.makeResourceIdentifierObject(resourceModel: parent)
+                let data = JsonApiData(resourceIdentifierObject: resourceIdentifierObject)
+                let document = JsonApiDocument(data: data)
+
+                return JsonApiResponse(status: .ok, document: document)
+            } else {
+                let document = JsonApiDocument()
+                return JsonApiResponse(status: .ok, document: document)
+            }
+        } else if let childrenCollection = try resource.childrenRelationships()[relationshipType] {
+
+            let page = try pageForQuery(query: query)
+            let pageNumber = page.pageNumber
+            let pageCount = page.pageCount
+
+            let paginator = JsonApiPagedPaginator(pageCount: pageCount, pageSize: pageNumber)
+            let resources = try childrenCollection.getter(paginator)
+
+            let jsonDocument = try resourceLinkageDocument(forResources: resources, baseUrl: req.uri)
+
+            return JsonApiResponse(status: .ok, document: jsonDocument)
+        } else if let siblingsCollection = try resource.siblingsRelationships()[relationshipType] {
+
+            let page = try pageForQuery(query: query)
+            let pageNumber = page.pageNumber
+            let pageCount = page.pageCount
+
+            let paginator = JsonApiPagedPaginator(pageCount: pageCount, pageSize: pageNumber)
+            let resources = try siblingsCollection.getter(paginator)
+
+            let jsonDocument = try resourceLinkageDocument(forResources: resources, baseUrl: req.uri)
+
+            return JsonApiResponse(status: .ok, document: jsonDocument)
+        }
+        
         throw JsonApiRelationshipNotFoundError(relationship: relationshipType)
     }
 
@@ -234,6 +289,16 @@ fileprivate extension JsonApiResourceController {
         }
 
         let data = JsonApiData(resourceObjects: resourceObjects)
+        return JsonApiDocument(data: data)
+    }
+
+    fileprivate func resourceLinkageDocument(forResources resources: [JsonApiResourceModel], baseUrl: URI) throws -> JsonApiDocument {
+        var resourceIdentifierObjects = [JsonApiResourceIdentifierObject]()
+        for r in resources {
+            resourceIdentifierObjects.append(try r.makeResourceIdentifierObject(resourceModel: r))
+        }
+
+        let data = JsonApiData(resourceIdentifierObjects: resourceIdentifierObjects)
         return JsonApiDocument(data: data)
     }
 }

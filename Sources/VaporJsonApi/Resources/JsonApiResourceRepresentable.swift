@@ -107,7 +107,7 @@ public extension JsonApiResourceRepresentable {
         return JsonApiResourceObject(id: id, type: type, attributes: attributesObject, relationships: relationshipsObject, links: links)
     }
 
-    public func makeResourceIdentifierObject(resourceModel: JsonApiResourceModel, meta: JsonApiMeta?) throws -> JsonApiResourceIdentifierObject {
+    public func makeResourceIdentifierObject(resourceModel: JsonApiResourceModel, meta: JsonApiMeta? = nil) throws -> JsonApiResourceIdentifierObject {
         guard let id = resourceModel.id?.string ?? resourceModel.id?.int?.string else {
             throw JsonApiInternalServerError(title: "Internal Server Error", detail: "A fetched model does not seem to have a valid id.")
         }
