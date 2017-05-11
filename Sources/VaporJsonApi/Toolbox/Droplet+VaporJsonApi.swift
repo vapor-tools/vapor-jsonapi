@@ -14,9 +14,12 @@ public extension Droplet {
     public func jsonApiResource<C: JsonApiResourceController>(controller: C) {
         let resourceType = controller.resourceType.parse()
         // Get routes
-        get(resourceType, handler: controller.getResources)
-        get(resourceType, String.self, handler: controller.getResource)
-        get(resourceType, String.self, String.self, handler: controller.getRelatedResource)
+        group(resourceType) { resourceType in
+            resourceType.get(handler: controller.getResources)
+            get(String.self, handler: controller.getResource)
+            get(String.self, String.self, handler: controller.getRelatedResource)
+            get(String.self, "relationships", String.self, handler: controller.getRelationships)
+        }
 
         // Post routes
         post(resourceType, handler: controller.postResource)
