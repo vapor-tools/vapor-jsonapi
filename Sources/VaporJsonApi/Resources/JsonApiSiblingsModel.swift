@@ -22,6 +22,7 @@ public struct JsonApiSiblingsModel {
     public let replacer: JsonApiSiblingsReplacer?
 
     public let findInModel: (_ id: NodeRepresentable) throws -> JsonApiResourceModel?
+    public let resourceType: JsonApiResourceType
 
     public init<T: JsonApiResourceModel>(siblingType: T.Type, getter: @escaping JsonApiSiblingsGetter, adder: JsonApiSiblingsAdder? = nil, replacer: JsonApiSiblingsReplacer? = nil) {
         self.getter = getter
@@ -32,6 +33,7 @@ public struct JsonApiSiblingsModel {
         self.findInModel = { id in
             return try T.find(id)
         }
+        self.resourceType = T.resourceType
     }
 
     public init<S: JsonApiResourceModel, T: JsonApiResourceModel>(model: S, siblingType: T.Type, localKey: String? = nil, foreignKey: String? = nil) {
@@ -61,5 +63,6 @@ public struct JsonApiSiblingsModel {
         self.findInModel = { id in
             return try T.find(id)
         }
+        self.resourceType = T.resourceType
     }
 }

@@ -385,3 +385,25 @@ public class JsonApiTypeConflictError: JsonApiGeneralError {
         self.init(title: "Invalid type value", detail: "\(type) is not a valid type value.")
     }
 }
+
+public class JsonApiUpdateNotAllowedError: JsonApiGeneralError {
+
+    public init(title: String, detail: String) {
+        super.init(status: Status.forbidden, code: String(Status.forbidden.statusCode), title: title, detail: detail)
+    }
+
+    public convenience init() {
+        self.init(title: "Update not allowed", detail: "You are not allowed to update this resource.")
+    }
+}
+
+public class JsonApiAttributesRequiredError: JsonApiGeneralError {
+
+    public init(title: String, detail: String) {
+        super.init(status: Status.badRequest, code: String(Status.badRequest.statusCode), title: title, detail: detail)
+    }
+
+    public convenience init() {
+        self.init(title: "attributes required", detail: "An attributes object is required in the data object.")
+    }
+}

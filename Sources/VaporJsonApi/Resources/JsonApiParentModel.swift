@@ -20,6 +20,7 @@ public struct JsonApiParentModel {
     public let setter: JsonApiParentSetter?
 
     public let findInModel: (_ id: NodeRepresentable) throws -> JsonApiResourceModel?
+    public let resourceType: JsonApiResourceType
 
     public init<T: JsonApiResourceModel>(parentType: T.Type, getter: @escaping JsonApiParentGetter, setter: JsonApiParentSetter? = nil) {
         self.getter = getter
@@ -29,5 +30,6 @@ public struct JsonApiParentModel {
         self.findInModel = { id in
             return try T.find(id)
         }
+        self.resourceType = T.resourceType
     }
 }

@@ -23,5 +23,8 @@ public extension Droplet {
 
         // Post routes
         post(resourceType, handler: controller.postResource)
+
+        // Patch routes
+        patch(resourceType, String.self, handler: controller.patchResource)
     }
 }

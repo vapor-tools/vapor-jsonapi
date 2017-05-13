@@ -223,8 +223,12 @@ public extension JsonApiResourceController {
             throw JsonApiTypeConflictError(type: type)
         }
 
-        let node = bodyData?["attributes"]?.makeNode()
-        var resource = try Resource(node: node)
+        var resource: Resource
+        if let node = bodyData?["attributes"]?.makeNode() {
+            resource = try Resource(node: node)
+        } else {
+            throw JsonApiAttributesRequiredError()
+        }
 
         // TODO: Check jsonapi document for correct to-many relationship handling
         if let relationships = bodyData?["relationships"]?.object {
@@ -241,6 +245,11 @@ public extension JsonApiResourceController {
                     guard let p = try parent.findInModel(id) else {
                         throw JsonApiRecordNotFoundError(id: id)
                     }
+                    // Check type
+                    guard type == parent.resourceType.parse() else {
+                        throw JsonApiTypeConflictError(type: type)
+                    }
+
                     guard let setter = parent.setter else {
                         throw JsonApiRelationshipNotAllowedError(relationship: type)
                     }
@@ -264,6 +273,143 @@ public extension JsonApiResourceController {
         let document = JsonApiDocument(data: data)
 
         return JsonApiResponse(status: .created, document: document)
+    }
+
+    /**
+     * The `patchResource` method is responsible for patch requests to a specific resource.
+     *
+     * Example: `/articles/1` for editing an article resource.
+     *
+     * - parameter req: The `Request` which fired this method.
+     * - parameter id: The id represented as a String which is the first and only route parameter for this request.
+     */
+    func patchResource(_ req: Request, _ id: String) throws -> ResponseRepresentable {
+
+        guard req.fulfillsJsonApiAcceptResponsibilities() else {
+            throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
+        }
+
+        guard req.fulfillsJsonApiContentTypeResponsibilities() else {
+            throw JsonApiUnsupportedMediaTypeError(mediaType: req.contentTypeHeaderValue() ?? "*No Content-Type header*")
+        }
+
+        let bodyData = req.jsonApiJson?["data"]
+
+        // Check type
+        guard let type = bodyData?["type"]?.string else {
+            throw JsonApiParameterMissingError(parameter: "type")
+        }
+        guard type == Resource.resourceType.parse() else {
+            throw JsonApiTypeConflictError(type: type)
+        }
+
+        // Check id
+        guard let bodyId = bodyData?["id"]?.string else {
+            throw JsonApiMissingKeyError()
+        }
+        guard bodyId == id else {
+            throw JsonApiKeyNotIncludedInURLError(key: bodyId)
+        }
+
+        // Check resource
+        guard var resource = try Resource.find(id) else {
+            throw JsonApiRecordNotFoundError(id: id)
+        }
+
+        if let node = bodyData?["attributes"]?.makeNode() {
+            try resource.update(node: node)
+        }
+
+        if let relationships = bodyData?["relationships"]?.object {
+            for r in relationships {
+                // Get relationships
+                let parents = try resource.parentRelationships()
+                let children = try resource.childrenRelationships()
+                let siblings = try resource.siblingsRelationships()
+
+                if let parent = parents[r.key] {
+                    guard let id = r.value.object?["id"]?.string, let type = r.value.object?["type"]?.string else {
+                        throw JsonApiBadRequestError(title: "Bad Request", detail: "The relationship \(r.key) must have a type and id value.")
+                    }
+                    guard let p = try parent.findInModel(id) else {
+                        throw JsonApiRecordNotFoundError(id: id)
+                    }
+                    // Check type
+                    guard type == parent.resourceType.parse() else {
+                        throw JsonApiTypeConflictError(type: type)
+                    }
+
+                    guard let setter = parent.setter else {
+                        throw JsonApiRelationshipNotAllowedError(relationship: type)
+                    }
+
+                    try setter(p)
+                } else if let child = children[r.key] {
+                    guard let childs = r.value.array else {
+                        throw JsonApiBadRequestError(title: "Bad relationship object", detail: "A to-many relationship must be provided as an array in the relationships object.")
+                    }
+                    var resources: [JsonApiResourceModel] = []
+                    for c in childs {
+                        guard let id = c.object?["id"]?.string, let type = c.object?["type"]?.string else {
+                            throw JsonApiBadRequestError(title: "Bad Request", detail: "The relationship \(r.key) must have a type and id value.")
+                        }
+                        guard let cc = try child.findInModel(id) else {
+                            throw JsonApiRecordNotFoundError(id: id)
+                        }
+                        // Check type
+                        guard type == child.resourceType.parse() else {
+                            throw JsonApiTypeConflictError(type: type)
+                        }
+
+                        resources.append(cc)
+                    }
+
+                    // Check replacer
+                    guard let replacer = child.replacer else {
+                        throw JsonApiToManySetReplacementForbiddenError()
+                    }
+
+                    try replacer(resources)
+                } else if let sibling = siblings[r.key] {
+                    guard let siblings = r.value.array else {
+                        throw JsonApiBadRequestError(title: "Bad relationship object", detail: "A to-many relationship must be provided as an array in the relationships object.")
+                    }
+                    var resources: [JsonApiResourceModel] = []
+                    for s in siblings {
+                        guard let id = s.object?["id"]?.string, let type = s.object?["type"]?.string else {
+                            throw JsonApiBadRequestError(title: "Bad Request", detail: "The relationship \(r.key) must have a type and id value.")
+                        }
+                        guard let ss = try sibling.findInModel(id) else {
+                            throw JsonApiRecordNotFoundError(id: id)
+                        }
+                        // Check type
+                        guard type == sibling.resourceType.parse() else {
+                            throw JsonApiTypeConflictError(type: type)
+                        }
+
+                        resources.append(ss)
+                    }
+
+                    // Check replacer
+                    guard let replacer = sibling.replacer else {
+                        throw JsonApiToManySetReplacementForbiddenError()
+                    }
+                    
+                    try replacer(resources)
+                } else {
+                    throw JsonApiRelationshipNotAllowedError(relationship: r.key)
+                }
+            }
+        }
+        try resource.save()
+
+        // Return newly saved object as jsonapi resource
+        let resourceObject = try resource.makeResourceObject(resourceModel: resource, baseUrl: req.uri)
+
+        let data = JsonApiData(resourceObject: resourceObject)
+        let document = JsonApiDocument(data: data)
+
+        return JsonApiResponse(status: .ok, document: document)
     }
 }
 

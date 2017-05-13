@@ -53,6 +53,10 @@ open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
 
     public required init(node: Node, in context: Context) throws {}
 
+    open func update(node: Node) throws {
+        throw JsonApiUpdateNotAllowedError()
+    }
+
     open func makeNode(context: Context) throws -> Node {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement makeNode()")
     }
