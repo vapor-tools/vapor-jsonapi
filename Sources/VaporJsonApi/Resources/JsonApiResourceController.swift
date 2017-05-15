@@ -256,9 +256,9 @@ public extension JsonApiResourceController {
 
                     try setter(p)
                 } else if let _ = children[r.key] {
-                    throw JsonApiBadRequestError(title: "Setting to-many relationships not allowed", detail: "You set to-many relationships in the same step as creating a resource right now. You tried to set \(r.key) for this resource.")
+                    // throw JsonApiBadRequestError(title: "Setting to-many relationships not allowed", detail: "You set to-many relationships in the same step as creating a resource right now. You tried to set \(r.key) for this resource.")
                 } else if let _ = siblings[r.key] {
-                    throw JsonApiBadRequestError(title: "Setting to-many relationships not allowed", detail: "You set to-many relationships in the same step as creating a resource right now. You tried to set \(r.key) for this resource.")
+                    // throw JsonApiBadRequestError(title: "Setting to-many relationships not allowed", detail: "You set to-many relationships in the same step as creating a resource right now. You tried to set \(r.key) for this resource.")
                 } else {
                     throw JsonApiRelationshipNotAllowedError(relationship: r.key)
                 }
