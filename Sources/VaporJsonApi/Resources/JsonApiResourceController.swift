@@ -8,7 +8,7 @@
 
 import Vapor
 import HTTP
-import Fluent
+import FluentProvider
 import URI
 
 public protocol JsonApiResourceController {
@@ -36,12 +36,12 @@ public extension JsonApiResourceController {
             throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
         }
 
-        let query = req.jsonApiQuery()
+        let query = req.query?.converted(to: JSON.self)
 
         let page = try pageForQuery(query: query)
         let pagination = JsonApiPagedPaginator(pageCount: page.pageCount, pageSize: page.pageNumber)
 
-        let resources = try Resource.query().limit(pagination.pageCount, withOffset: pagination.pageOffset).all()
+        let resources = try Resource.makeQuery().limit(pagination.pageCount, offset: pagination.pageOffset).all()
         let jsonDocument = try document(forResources: resources, baseUrl: req.uri)
 
         return JsonApiResponse(status: .ok, document: jsonDocument)
@@ -50,12 +50,14 @@ public extension JsonApiResourceController {
     /**
      * The `getResource` method is responsible for get requests to a specific resource.
      *
+     * The id represented as a String is expected to be the first and only route parameter for this request.
+     *
      * Example: `/articles/5` for the article resource.
      *
      * - parameter req: The `Request` which fired this method.
-     * - parameter id: The id represented as a String which is the first and only route parameter for this request.
      */
-    func getResource(_ req: Request, _ id: String) throws -> ResponseRepresentable {
+    func getResource(_ req: Request) throws -> ResponseRepresentable {
+        let id = try req.parameters.next(String.self)
 
         guard req.fulfillsJsonApiAcceptResponsibilities() else {
             throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
@@ -78,13 +80,18 @@ public extension JsonApiResourceController {
     /**
      * The `getRelatedResource` method is responsible for get requests to a relationship of a specific resource.
      *
+     * The id represented as a String is expected to be the first route parameter for this request.
+     *
+     * The relationshipType represented as a String which is the relationship name as defined in
+     * the JsonApiResourceModel is expected to be the second and last parameter for this request.
+     *
      * Example: `/articles/5/author` for the author resource of the article with id `5`.
      *
      * - parameter req: The `Request` which fired this method.
-     * - parameter id: The id represented as a String which is the first route parameter for this request.
-     * - parameter relationshipType: The relationshipType represented as a String which is the relationship name as defined in the JsonApiResourceModel.
      */
-    func getRelatedResource(_ req: Request, _ id: String, _ relationshipType: String) throws -> ResponseRepresentable {
+    func getRelatedResource(_ req: Request) throws -> ResponseRepresentable {
+        let id = try req.parameters.next(String.self)
+        let relationshipType = try req.parameters.next(String.self)
 
         guard req.fulfillsJsonApiAcceptResponsibilities() else {
             throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
@@ -94,7 +101,7 @@ public extension JsonApiResourceController {
             throw JsonApiRecordNotFoundError(id: id)
         }
 
-        let query = req.jsonApiQuery()
+        let query = req.query?.converted(to: JSON.self)
 
         if let parentModel = try resource.parentRelationships()[relationshipType] {
             if let parent = try parentModel.getter() {
@@ -139,13 +146,18 @@ public extension JsonApiResourceController {
     /**
      * The `getRelationships` method is responsible for get requests to a resource linkage object for a resource.
      *
+     * The id represented as a String is expected to be the first route parameter for this request.
+     *
+     * The relationshipType represented as a String which is the relationship name as defined in
+     * the JsonApiResourceModel is expected to be the second and last parameter for this request.
+     *
      * Example: `/articles/5/relationships/author` for the author resource linkage of the article with id `5`.
      *
      * - parameter req: The `Request` which fired this method.
-     * - parameter id: The id represented as a String which is the first route parameter for this request.
-     * - parameter relationshipType: The relationshipType represented as a String which is the relationship name as defined in the JsonApiResourceModel.
      */
-    func getRelationships(_ req: Request, _ id: String, _ relationshipType: String) throws -> ResponseRepresentable {
+    func getRelationships(_ req: Request) throws -> ResponseRepresentable {
+        let id = try req.parameters.next(String.self)
+        let relationshipType = try req.parameters.next(String.self)
 
         guard req.fulfillsJsonApiAcceptResponsibilities() else {
             throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
@@ -155,7 +167,7 @@ public extension JsonApiResourceController {
             throw JsonApiRecordNotFoundError(id: id)
         }
 
-        let query = req.jsonApiQuery()
+        let query = req.query?.converted(to: JSON.self)
 
         if let parentModel = try resource.parentRelationships()[relationshipType] {
             if let parent = try parentModel.getter() {
@@ -224,8 +236,8 @@ public extension JsonApiResourceController {
         }
 
         var resource: Resource
-        if let node = bodyData?["attributes"]?.makeNode() {
-            resource = try Resource(node: node)
+        if let json = bodyData?["attributes"] {
+            resource = try Resource(row: json.converted())
         } else {
             throw JsonApiAttributesRequiredError()
         }
@@ -278,12 +290,14 @@ public extension JsonApiResourceController {
     /**
      * The `patchResource` method is responsible for patch requests to a specific resource.
      *
+     * The id represented as a String is expected to be the first and only route parameter for this request.
+     *
      * Example: `/articles/1` for editing an article resource.
      *
      * - parameter req: The `Request` which fired this method.
-     * - parameter id: The id represented as a String which is the first and only route parameter for this request.
      */
-    func patchResource(_ req: Request, _ id: String) throws -> ResponseRepresentable {
+    func patchResource(_ req: Request) throws -> ResponseRepresentable {
+        let id = try req.parameters.next(String.self)
 
         guard req.fulfillsJsonApiAcceptResponsibilities() else {
             throw JsonApiNotAcceptableError(mediaType: req.acceptHeaderValue() ?? "*No Accept header*")
@@ -316,8 +330,8 @@ public extension JsonApiResourceController {
             throw JsonApiRecordNotFoundError(id: id)
         }
 
-        if let node = bodyData?["attributes"]?.makeNode() {
-            try resource.update(node: node)
+        if let json = bodyData?["attributes"] {
+            try resource.update(json: json)
         }
 
         if let relationships = bodyData?["relationships"]?.object {
@@ -415,14 +429,14 @@ public extension JsonApiResourceController {
 
 fileprivate extension JsonApiResourceController {
 
-    fileprivate func pageForQuery(query: JSON) throws -> (pageCount: Int, pageNumber: Int) {
-        let pageCount = query["page"]?["size"]?.string?.int ?? JsonApiConfig.defaultPageSize
+    fileprivate func pageForQuery(query: JSON?) throws -> (pageCount: Int, pageNumber: Int) {
+        let pageCount = query?["page"]?["size"]?.string?.int ?? JsonApiConfig.defaultPageSize
         if pageCount > JsonApiConfig.maximumPageSize {
-            throw JsonApiInvalidPageValueError(page: "page[size]", value: query["page"]?["size"]?.string ?? "*Nothing*")
+            throw JsonApiInvalidPageValueError(page: "page[size]", value: query?["page"]?["size"]?.string ?? "*Nothing*")
         }
-        let pageNumber = query["page"]?["number"]?.string?.int ?? 1
+        let pageNumber = query?["page"]?["number"]?.string?.int ?? 1
         if pageNumber < 1 {
-            throw JsonApiInvalidPageValueError(page: "page[number]", value: query["page"]?["number"]?.string ?? "*Nothing*")
+            throw JsonApiInvalidPageValueError(page: "page[number]", value: query?["page"]?["number"]?.string ?? "*Nothing*")
         }
 
         return (pageCount: pageCount, pageNumber: pageNumber)

@@ -8,9 +8,12 @@
 
 import Vapor
 import HTTP
-import Fluent
+import FluentProvider
 
 open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
+
+    /// The storage
+    public var storage: Storage = Storage()
 
     // MARK: - JsonApiResourceRepresentable stubs
 
@@ -41,24 +44,22 @@ open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
     public init() {}
 
     /**
-     * Initializes all required and optional attributes from the given `node`, runs validations and
+     * Initializes all required and optional attributes from the given `row`, runs validations and
      * throws if these validations are not satisfied.
      *
-     * `id` will not be available inside `node` as this initializer will only be called to create
+     * `id` will not be available inside `row` as this initializer will only be called to create
      * new resources. Subclasses may not require an id value for this initializer.
      *
-     * - parameter node: A node element where all of the attributes are stored.
+     * - parameter row: A row element where all of the attributes are stored.
      */
-    public required init(node: Node) throws {}
+    public required init(row: Row) throws {}
 
-    public required init(node: Node, in context: Context) throws {}
-
-    open func update(node: Node) throws {
+    open func update(json: JSON) throws {
         throw JsonApiUpdateNotAllowedError()
     }
 
-    open func makeNode(context: Context) throws -> Node {
-        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement makeNode()")
+    open func makeRow() throws -> Row {
+        throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement makeRow()")
     }
 
     open class func prepare(_ database: Database) throws {
@@ -67,5 +68,13 @@ open class JsonApiResourceModel: Model, JsonApiResourceRepresentable {
 
     open class func revert(_ database: Database) throws {
         throw JsonApiInternalServerError(title: "Internal Server Error", detail: "Subclasses of 'Model' must implement revert(_:)")
+    }
+
+    public static func make(for parameter: String) throws -> Self {
+        let id = Identifier(parameter)
+        guard let found = try find(id) else {
+            throw JsonApiRecordNotFoundError(id: parameter)
+        }
+        return found
     }
 }

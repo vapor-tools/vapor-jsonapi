@@ -69,9 +69,11 @@ extension Message {
     }
 }
 
+/*
 extension Request {
 
     func jsonApiQuery() -> JSON {
         return uri.jsonApiQuery()
     }
 }
+ */

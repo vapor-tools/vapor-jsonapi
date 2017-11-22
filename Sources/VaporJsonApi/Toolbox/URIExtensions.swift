@@ -18,6 +18,6 @@ extension URI {
             portString = ":\(String(port))"
         }
 
-        return "\(scheme)://\(host)\(portString)"
+        return "\(scheme)://\(hostname)\(portString)"
     }
 }

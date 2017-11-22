@@ -36,25 +36,29 @@ public struct JsonApiSiblingsModel {
         self.resourceType = T.resourceType
     }
 
-    public init<S: JsonApiResourceModel, T: JsonApiResourceModel>(model: S, siblingType: T.Type, localKey: String? = nil, foreignKey: String? = nil) {
+    public init<S: JsonApiResourceModel, T: JsonApiResourceModel>(model: S, siblingType: T.Type, localKey: String, foreignKey: String) {
         getter = { paginator in
-            let elements: [S] = try model.siblings(localKey, foreignKey).limit(paginator.pageCount, withOffset: paginator.pageOffset).all()
+            let elements = try model.siblings(to: S.self, through: T.self, localIdKey: localKey, foreignIdKey: foreignKey).limit(paginator.pageCount, offset: paginator.pageOffset).all()
             return elements
         }
 
         // TODO: Don't allow duplicate linkage
         self.adder = { siblings in
             for s in siblings {
-                var p = Pivot<S, T>(model, s)
-                try p.save()
+                if let s = s as? T {
+                    let p = try Pivot<S, T>(model, s)
+                    try p.save()
+                }
             }
         }
         self.replacer = { siblings in
-            let oldSiblings: Siblings<T> = try model.siblings(localKey, foreignKey)
+            let oldSiblings = model.siblings(to: S.self, through: T.self, localIdKey: localKey, foreignIdKey: foreignKey)
             try oldSiblings.delete()
             for s in siblings {
-                var p = Pivot<S, T>(model, s)
-                try p.save()
+                if let s = s as? T {
+                    let p = try Pivot<S, T>(model, s)
+                    try p.save()
+                }
             }
         }
 

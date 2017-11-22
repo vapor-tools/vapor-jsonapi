@@ -10,6 +10,7 @@ import HTTP
 import Vapor
 import URI
 
+/*
 extension URI {
 
     // TODO: Vapor 2.0 will include query dictionary parsing so this should be removed ASAP once it is released.
@@ -100,3 +101,4 @@ fileprivate extension String {
         return (topLevelKey: topLevelKey, dictionaryKey: dictionaryKey)
     }
 }
+ */

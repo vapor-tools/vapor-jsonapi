@@ -12,7 +12,7 @@ import URI
 
 public protocol JsonApiResourceRepresentable {
 
-    typealias JsonApiAttributes = [String: (getter: () throws -> NodeRepresentable?, setter: (_ value: NodeRepresentable) throws -> ())]
+    typealias JsonApiAttributes = [String: (getter: () throws -> JSONRepresentable?, setter: (_ value: JSONRepresentable) throws -> ())]
 
     typealias JsonApiParentRelationships = [String: JsonApiParentModel]
 
@@ -77,8 +77,8 @@ public extension JsonApiResourceRepresentable {
 
         var attr = try JSON(node: [:])
         for s in try attributes() {
-            if let node = try s.value.getter()?.makeNode() {
-                attr[s.key] = JSON(node)
+            if let json = try s.value.getter()?.makeJSON() {
+                attr[s.key] = json
             }
         }
 
@@ -100,7 +100,7 @@ public extension JsonApiResourceRepresentable {
             relationshipObjects.append(try makeSiblingsRelationshipObject(name: s.key, type: s.value.type, getter: s.value.getter, baseUrl: baseUrl, resourcePath: resourcePath))
         }
 
-        let selfLink = URI(scheme: baseUrl.scheme, host: baseUrl.host, port: baseUrl.port, path: "\(resourcePath)")
+        let selfLink = URI(scheme: baseUrl.scheme, hostname: baseUrl.hostname, port: baseUrl.port, path: "\(resourcePath)")
         let links = JsonApiLinksObject(selfLink: selfLink)
 
         let relationshipsObject = JsonApiRelationshipsObject(relationshipObjects: relationshipObjects)
@@ -218,10 +218,10 @@ fileprivate extension JsonApiResourceRepresentable {
     }
 
     fileprivate func relationshipSelfUrl(name: String, baseUrl: URI, resourcePath: String) -> URI {
-        return URI(scheme: baseUrl.scheme, host: baseUrl.host, port: baseUrl.port, path: "\(resourcePath)/relationships/\(name)")
+        return URI(scheme: baseUrl.scheme, hostname: baseUrl.hostname, port: baseUrl.port, path: "\(resourcePath)/relationships/\(name)")
     }
 
     fileprivate func relationshipRelatedUrl(name: String, baseUrl: URI, resourcePath: String) -> URI {
-        return URI(scheme: baseUrl.scheme, host: baseUrl.host, port: baseUrl.port, path: "\(resourcePath)/\(name)")
+        return URI(scheme: baseUrl.scheme, hostname: baseUrl.hostname, port: baseUrl.port, path: "\(resourcePath)/\(name)")
     }
 }
